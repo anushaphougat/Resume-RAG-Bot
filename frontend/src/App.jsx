@@ -2,15 +2,6 @@ import { useState } from "react";
 import "./App.css";
 
 import {
-  FaCloudUploadAlt,
-  FaFilePdf,
-  FaBrain,
-  FaCheckCircle,
-  FaSearch,
-  FaClipboardList,
-} from "react-icons/fa";
-
-import {
   uploadResume,
   askQuestion,
   analyzeAts,
