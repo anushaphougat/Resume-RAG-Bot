@@ -100,8 +100,6 @@ export default function App() {
   return (
     <div className="app">
 
-      <div className="ambient-glow"></div>
-
       {/* Topbar */}
       <header className="topbar">
         <div className="brand">
