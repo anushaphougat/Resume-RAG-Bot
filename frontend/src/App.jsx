@@ -94,9 +94,6 @@ export default function App() {
       {/* Topbar */}
       <header className="topbar">
         <div className="brand">
-          <div className="brand-mark">
-            <FaFilePdf />
-          </div>
           <div className="brand-text">
             <h1>Resume<span>AI</span></h1>
             <p>RAG-powered resume intelligence</p>
@@ -117,7 +114,6 @@ export default function App() {
 
           <div className="paper-card">
             <label htmlFor="resume-upload" className="upload-dropzone">
-              <FaCloudUploadAlt className="upload-icon" />
               <h3>{file ? "Resume selected" : "Drop resume here"}</h3>
               <p>{file ? file.name : "or click to browse"}</p>
               <span className="format-tag">PDF only</span>
@@ -143,7 +139,7 @@ export default function App() {
           <div className="stat-block">
 
             <div className="stat-row">
-              <div className="stat-icon"><FaFilePdf /></div>
+              <div className="stat-icon"></div>
               <div className="stat-copy">
                 <span className="stat-label">Resume</span>
                 <span className="stat-value">
@@ -153,7 +149,7 @@ export default function App() {
             </div>
 
             <div className="stat-row">
-              <div className="stat-icon"><FaBrain /></div>
+              <div className="stat-icon"></div>
               <div className="stat-copy">
                 <span className="stat-label">Indexed chunks</span>
                 <span className="stat-value mono">{chunks}</span>
@@ -161,7 +157,7 @@ export default function App() {
             </div>
 
             <div className="stat-row">
-              <div className="stat-icon"><FaCheckCircle /></div>
+              <div className="stat-icon"></div>
               <div className="stat-copy">
                 <span className="stat-label">AI status</span>
                 <span className="stat-value">
@@ -186,13 +182,13 @@ export default function App() {
               className={activeTab === "ask" ? "tab active" : "tab"}
               onClick={() => setActiveTab("ask")}
             >
-              <FaSearch /> Ask Resume AI
+              Ask Resume AI
             </button>
             <button
               className={activeTab === "ats" ? "tab active" : "tab"}
               onClick={() => setActiveTab("ats")}
             >
-              <FaClipboardList /> ATS Analysis
+               ATS Analysis
             </button>
           </nav>
 
