@@ -64,8 +64,18 @@ def home():
 def health_check():
     return {"status": "healthy"}
 
+@app.get("/debug-routes")
+def debug_routes():
+    return [{"path": route.path, "methods": list(route.methods)} for route in app.routes if hasattr(route, "methods")]
+
 @app.post("/upload_resume/")
 @app.post("/upload_resume")
+@app.post("/upload-resume/")
+@app.post("/upload-resume")
+@app.post("/api/upload_resume/")
+@app.post("/api/upload_resume")
+@app.post("/api/upload-resume/")
+@app.post("/api/upload-resume")
 async def upload_resume(file: UploadFile = File(...)):
     global LATEST_RESUME_TEXT, LATEST_FILENAME
     try:
@@ -111,6 +121,10 @@ async def upload_resume(file: UploadFile = File(...)):
 @app.post("/ask-question")
 @app.post("/ask_question/")
 @app.post("/ask_question")
+@app.post("/api/ask-question/")
+@app.post("/api/ask-question")
+@app.post("/api/ask_question/")
+@app.post("/api/ask_question")
 async def ask_question(request: QuestionRequest):
     try:
         if not request.question or not request.question.strip():
@@ -132,6 +146,10 @@ async def ask_question(request: QuestionRequest):
 @app.post("/analyze-ats")
 @app.post("/analyze_ats/")
 @app.post("/analyze_ats")
+@app.post("/api/analyze-ats/")
+@app.post("/api/analyze-ats")
+@app.post("/api/analyze_ats/")
+@app.post("/api/analyze_ats")
 async def analyze_ats(request: AtsRequest):
     """
     Runs an ATS-style review on a resume that has already been uploaded.

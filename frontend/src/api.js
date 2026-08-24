@@ -44,11 +44,8 @@ export async function checkBackendHealth() {
 export async function uploadResume(file) {
   const formData = new FormData();
   formData.append("file", file);
-  const { data } = await api.post("/upload_resume", formData, {
-    headers: {
-      "Content-Type": "multipart/form-data",
-    },
-  });
+  // Do not set Content-Type header manually so axios/browser automatically includes multipart boundary
+  const { data } = await api.post("/upload_resume", formData);
   return data;
 }
 
