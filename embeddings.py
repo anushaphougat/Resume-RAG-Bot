@@ -53,3 +53,15 @@ def create_vector_store(chunks):
     os.makedirs("vector_db", exist_ok=True)
     vector_store.save_local("vector_db")
     return vector_store
+
+# Pre-warm embedding model in background thread so first upload is instant
+import threading
+
+def _warmup_worker():
+    try:
+        get_embedding_model()
+        print("Embedding model successfully loaded in background.")
+    except Exception as e:
+        print(f"Embedding warmup error: {e}")
+
+threading.Thread(target=_warmup_worker, daemon=True).start()

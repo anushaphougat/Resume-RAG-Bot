@@ -647,6 +647,20 @@ textarea:focus-visible{
     color:#059669;
 }
 
+.upload-error-box{
+    background:#fef2f2;
+    border:1px solid #fecaca;
+    color:#b91c1c;
+    padding:10px 14px;
+    border-radius:10px;
+    font-size:12px;
+    line-height:1.5;
+    margin-top:10px;
+    text-align:left;
+    word-break:break-word;
+    animation:fadeIn .25s ease;
+}
+
 .ready-tag{
     color:#059669 !important;
     font-weight:600;

@@ -57,18 +57,21 @@ export default function App() {
     testConnection();
   }
 
+  const [uploadError, setUploadError] = useState("");
+
   async function handleUpload() {
     if (!file) {
-      alert("Please choose a PDF resume.");
+      setUploadError("Please choose a PDF resume.");
       return;
     }
 
     if (!file.name.toLowerCase().endsWith(".pdf")) {
-      alert("Please select a valid PDF file.");
+      setUploadError("Please select a valid PDF file.");
       return;
     }
 
     setUploadLoading(true);
+    setUploadError("");
 
     try {
       const res = await uploadResume(file);
@@ -78,17 +81,20 @@ export default function App() {
       setAnswer("");
       setAtsResult("");
       setServerOnline(true);
+      setUploadError("");
     } catch (err) {
-      console.error(err);
+      console.error("Upload error details:", err);
       let errMsg = "Resume upload failed.";
       if (err.response?.data?.detail) {
-        errMsg = err.response.data.detail;
+        errMsg = typeof err.response.data.detail === "string" 
+          ? err.response.data.detail 
+          : JSON.stringify(err.response.data.detail);
       } else if (err.code === "ERR_NETWORK" || err.message?.includes("Network Error")) {
-        errMsg = `Cannot connect to backend at ${getApiBaseUrl()}.\n\nIf you deployed the frontend on Netlify, please click "Backend Settings" at the top and enter your live Railway backend URL (e.g. https://...up.railway.app).`;
+        errMsg = `Cannot connect to backend at ${getApiBaseUrl()}. Please click 'Backend Settings' and verify your Railway URL.`;
       } else if (err.message) {
         errMsg = err.message;
       }
-      alert(errMsg);
+      setUploadError(errMsg);
     } finally {
       setUploadLoading(false);
     }
@@ -269,11 +275,16 @@ export default function App() {
               {uploadLoading ? "Indexing…" : "Upload & Index"}
             </button>
 
-            {!uploaded && file && !uploadLoading && (
+            {!uploaded && file && !uploadLoading && !uploadError && (
               <p className="upload-hint">Click &quot;Upload &amp; Index&quot; to activate AI</p>
             )}
-            {uploaded && (
+            {uploaded && !uploadError && (
               <p className="upload-hint success-hint">Indexed &amp; ready to chat</p>
+            )}
+            {uploadError && (
+              <div className="upload-error-box">
+                {uploadError}
+              </div>
             )}
           </div>
 

@@ -68,51 +68,65 @@ def health_check():
 @app.post("/upload_resume")
 async def upload_resume(file: UploadFile = File(...)):
     global LATEST_RESUME_TEXT, LATEST_FILENAME
-    if not file.filename or not validate_pdf(file.filename):
-        raise HTTPException(status_code=400, detail="Invalid file type. Only PDF files are supported.")
+    try:
+        if not file.filename or not validate_pdf(file.filename):
+            raise HTTPException(status_code=400, detail="Invalid file type. Only PDF files are supported.")
 
-    file_path = os.path.join("resumes", file.filename)
-    with open(file_path, "wb+") as buffer:
-        shutil.copyfileobj(file.file, buffer)
+        file_path = os.path.join("resumes", file.filename)
+        with open(file_path, "wb+") as buffer:
+            shutil.copyfileobj(file.file, buffer)
 
-    # Extract text from the uploaded resume
-    resume_text = extract_text_from_pdf(file_path)
-    if not resume_text or not resume_text.strip():
-        raise HTTPException(
-            status_code=400,
-            detail="The uploaded PDF contains no extractable text. Please ensure it is not a scanned image-only PDF."
-        )
+        # Extract text from the uploaded resume
+        resume_text = extract_text_from_pdf(file_path)
+        if not resume_text or not resume_text.strip():
+            raise HTTPException(
+                status_code=400,
+                detail="The uploaded PDF contains no extractable text. Please ensure it is not a scanned image-only PDF."
+            )
 
-    LATEST_RESUME_TEXT = resume_text
-    LATEST_FILENAME = file.filename
+        LATEST_RESUME_TEXT = resume_text
+        LATEST_FILENAME = file.filename
 
-    chunks = split_text(resume_text)
-    if not chunks:
-        raise HTTPException(status_code=400, detail="Failed to parse resume into chunks.")
+        chunks = split_text(resume_text)
+        if not chunks:
+            raise HTTPException(status_code=400, detail="Failed to parse resume into chunks.")
 
-    vector_store = create_vector_store(chunks)
-    set_retriever_from_vector_store(vector_store)
+        vector_store = create_vector_store(chunks)
+        set_retriever_from_vector_store(vector_store)
 
-    return {
-        "message": "Resume uploaded successfully",
-        "filename": file.filename,
-        "total_chunks": len(chunks),
-        "first_chunk": chunks[0].page_content if chunks else ""
-    }
+        return {
+            "message": "Resume uploaded successfully",
+            "filename": file.filename,
+            "total_chunks": len(chunks),
+            "first_chunk": chunks[0].page_content if chunks else ""
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Processing error: {str(e)}")
 
 @app.post("/ask-question/")
 @app.post("/ask-question")
 @app.post("/ask_question/")
 @app.post("/ask_question")
 async def ask_question(request: QuestionRequest):
-    if not request.question or not request.question.strip():
-        raise HTTPException(status_code=400, detail="Question cannot be empty.")
+    try:
+        if not request.question or not request.question.strip():
+            raise HTTPException(status_code=400, detail="Question cannot be empty.")
 
-    answer = ask_resume(request.question)
-    return {
-        "question": request.question,
-        "answer": answer
-    }
+        answer = ask_resume(request.question)
+        return {
+            "question": request.question,
+            "answer": answer
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"AI generation error: {str(e)}")
 
 @app.post("/analyze-ats/")
 @app.post("/analyze-ats")
@@ -122,13 +136,20 @@ async def analyze_ats(request: AtsRequest):
     """
     Runs an ATS-style review on a resume that has already been uploaded.
     """
-    resume_text = get_resume_text_or_404(request.filename)
-    result = analyze_resume_ats(resume_text)
+    try:
+        resume_text = get_resume_text_or_404(request.filename)
+        result = analyze_resume_ats(resume_text)
 
-    return {
-        "filename": request.filename or LATEST_FILENAME or "resume.pdf",
-        "ats_review": result
-    }
+        return {
+            "filename": request.filename or LATEST_FILENAME or "resume.pdf",
+            "ats_review": result
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"ATS analysis error: {str(e)}")
 
 if __name__ == "__main__":
     import uvicorn
