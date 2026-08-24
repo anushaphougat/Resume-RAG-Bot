@@ -42,6 +42,11 @@ def reload_retriever():
     init_retriever()
 
 
+def set_retriever_from_vector_store(vector_store):
+    global retriever
+    retriever = vector_store.as_retriever(search_kwargs={"k": 3})
+
+
 def retrieve_resume(query):
     if retriever is None:
         return []

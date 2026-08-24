@@ -2,7 +2,7 @@ from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from parser import extract_text_from_pdf
 from embeddings import split_text, create_vector_store
-from rag import ask_resume, reload_retriever
+from rag import ask_resume, reload_retriever, set_retriever_from_vector_store
 from ats import analyze_resume_ats
 from pydantic import BaseModel
 from utils import ensure_directory, validate_pdf
@@ -76,8 +76,8 @@ async def upload_resume(file: UploadFile = File(...)):
     if not chunks:
         raise HTTPException(status_code=400, detail="Failed to parse resume into chunks.")
 
-    create_vector_store(chunks)
-    reload_retriever()
+    vector_store = create_vector_store(chunks)
+    set_retriever_from_vector_store(vector_store)
 
     return {
         "message": "Resume uploaded successfully",
