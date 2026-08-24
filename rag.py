@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 from pathlib import Path
 from utils import format_llm_response
 from prompts import RESUME_QA_PROMPT
-from embeddings import embedding_model
+from embeddings import get_embedding_model
 import os
 
 load_dotenv(Path(__file__).resolve().parent / ".env")
@@ -24,9 +24,10 @@ def init_retriever():
     global retriever
     if os.path.exists("vector_db"):
         try:
+            model = get_embedding_model()
             vector_store = FAISS.load_local(
                 "vector_db",
-                embedding_model,
+                model,
                 allow_dangerous_deserialization=True
             )
             retriever = vector_store.as_retriever(search_kwargs={"k": 3})
@@ -39,9 +40,6 @@ def init_retriever():
 
 def reload_retriever():
     init_retriever()
-
-
-init_retriever()
 
 
 def retrieve_resume(query):
