@@ -635,6 +635,23 @@ textarea:focus-visible{
 
 }
 
+.upload-hint{
+    font-size:11px;
+    color:var(--amber);
+    text-align:center;
+    margin-top:8px;
+    font-weight:500;
+}
+
+.upload-hint.success-hint{
+    color:#059669;
+}
+
+.ready-tag{
+    color:#059669 !important;
+    font-weight:600;
+}
+
 ::selection{
     background:var(--amber);
     color:var(--paper-ink);

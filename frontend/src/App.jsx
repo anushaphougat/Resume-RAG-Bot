@@ -268,6 +268,13 @@ export default function App() {
             >
               {uploadLoading ? "Indexing…" : "Upload & Index"}
             </button>
+
+            {!uploaded && file && !uploadLoading && (
+              <p className="upload-hint">Click &quot;Upload &amp; Index&quot; to activate AI</p>
+            )}
+            {uploaded && (
+              <p className="upload-hint success-hint">Indexed &amp; ready to chat</p>
+            )}
           </div>
 
           <div className="stat-block">
@@ -291,8 +298,8 @@ export default function App() {
             <div className="stat-row">
               <div className="stat-copy">
                 <span className="stat-label">AI status</span>
-                <span className="stat-value">
-                  {uploaded ? "Ready" : "Offline"}
+                <span className={`stat-value ${uploaded ? "ready-tag" : ""}`}>
+                  {uploadLoading ? "Indexing…" : uploaded ? "Ready" : "Awaiting Upload"}
                 </span>
               </div>
             </div>
