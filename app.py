@@ -28,24 +28,33 @@ app.add_middleware(
 # Create the resumes directory if it doesn't exist
 ensure_directory("resumes")
 
+LATEST_RESUME_TEXT = ""
+LATEST_FILENAME = ""
+
 def get_resume_text_or_404(filename: str) -> str:
     """
     Looks up an already-uploaded resume by filename and extracts its text.
-    Raises a 404 if the file was never uploaded.
+    Checks in-memory cache first, then filesystem.
     """
+    global LATEST_RESUME_TEXT, LATEST_FILENAME
+    if filename and filename == LATEST_FILENAME and LATEST_RESUME_TEXT:
+        return LATEST_RESUME_TEXT
+
     file_path = os.path.join("resumes", filename)
-    if not os.path.exists(file_path):
-        raise HTTPException(
-            status_code=404,
-            detail=f"Resume '{filename}' not found. Upload it first via /upload_resume/."
-        )
-    text = extract_text_from_pdf(file_path)
-    if not text.strip():
-        raise HTTPException(
-            status_code=400,
-            detail=f"Could not extract text from '{filename}'. Please make sure the PDF contains selectable text."
-        )
-    return text
+    if os.path.exists(file_path):
+        text = extract_text_from_pdf(file_path)
+        if text.strip():
+            LATEST_RESUME_TEXT = text
+            LATEST_FILENAME = filename
+            return text
+
+    if LATEST_RESUME_TEXT:
+        return LATEST_RESUME_TEXT
+
+    raise HTTPException(
+        status_code=404,
+        detail=f"Resume '{filename}' not found. Please upload your PDF resume first."
+    )
 
 @app.get("/")
 def home():
@@ -56,7 +65,9 @@ def health_check():
     return {"status": "healthy"}
 
 @app.post("/upload_resume/")
+@app.post("/upload_resume")
 async def upload_resume(file: UploadFile = File(...)):
+    global LATEST_RESUME_TEXT, LATEST_FILENAME
     if not file.filename or not validate_pdf(file.filename):
         raise HTTPException(status_code=400, detail="Invalid file type. Only PDF files are supported.")
 
@@ -71,6 +82,9 @@ async def upload_resume(file: UploadFile = File(...)):
             status_code=400,
             detail="The uploaded PDF contains no extractable text. Please ensure it is not a scanned image-only PDF."
         )
+
+    LATEST_RESUME_TEXT = resume_text
+    LATEST_FILENAME = file.filename
 
     chunks = split_text(resume_text)
     if not chunks:
@@ -87,6 +101,9 @@ async def upload_resume(file: UploadFile = File(...)):
     }
 
 @app.post("/ask-question/")
+@app.post("/ask-question")
+@app.post("/ask_question/")
+@app.post("/ask_question")
 async def ask_question(request: QuestionRequest):
     if not request.question or not request.question.strip():
         raise HTTPException(status_code=400, detail="Question cannot be empty.")
@@ -98,18 +115,18 @@ async def ask_question(request: QuestionRequest):
     }
 
 @app.post("/analyze-ats/")
+@app.post("/analyze-ats")
+@app.post("/analyze_ats/")
+@app.post("/analyze_ats")
 async def analyze_ats(request: AtsRequest):
     """
     Runs an ATS-style review on a resume that has already been uploaded.
     """
-    if not request.filename or not request.filename.strip():
-        raise HTTPException(status_code=400, detail="Filename cannot be empty.")
-
     resume_text = get_resume_text_or_404(request.filename)
     result = analyze_resume_ats(resume_text)
 
     return {
-        "filename": request.filename,
+        "filename": request.filename or LATEST_FILENAME or "resume.pdf",
         "ats_review": result
     }
 

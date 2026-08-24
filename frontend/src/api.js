@@ -1,19 +1,27 @@
 import axios from "axios";
 
+export function sanitizeApiUrl(url) {
+  if (!url) return "";
+  let clean = url.trim().replace(/\/+$/, "");
+  // Strip common accidentally-pasted path suffixes
+  clean = clean.replace(/\/(docs|health|redoc|upload_resume|ask-question|analyze-ats)(\/?)$/i, "");
+  return clean;
+}
+
 export function getApiBaseUrl() {
   const savedUrl = localStorage.getItem("resume_bot_api_url");
   if (savedUrl && savedUrl.trim()) {
-    return savedUrl.trim().replace(/\/+$/, "");
+    return sanitizeApiUrl(savedUrl);
   }
   if (import.meta.env.VITE_API_URL) {
-    return import.meta.env.VITE_API_URL.trim().replace(/\/+$/, "");
+    return sanitizeApiUrl(import.meta.env.VITE_API_URL);
   }
   return "http://127.0.0.1:8000";
 }
 
 export function setApiBaseUrl(url) {
   if (url && url.trim()) {
-    localStorage.setItem("resume_bot_api_url", url.trim().replace(/\/+$/, ""));
+    localStorage.setItem("resume_bot_api_url", sanitizeApiUrl(url));
   } else {
     localStorage.removeItem("resume_bot_api_url");
   }
@@ -36,7 +44,7 @@ export async function checkBackendHealth() {
 export async function uploadResume(file) {
   const formData = new FormData();
   formData.append("file", file);
-  const { data } = await api.post("/upload_resume/", formData, {
+  const { data } = await api.post("/upload_resume", formData, {
     headers: {
       "Content-Type": "multipart/form-data",
     },
@@ -45,11 +53,11 @@ export async function uploadResume(file) {
 }
 
 export async function askQuestion(question) {
-  const { data } = await api.post("/ask-question/", { question });
+  const { data } = await api.post("/ask-question", { question });
   return data;
 }
 
 export async function analyzeAts(filename) {
-  const { data } = await api.post("/analyze-ats/", { filename });
+  const { data } = await api.post("/analyze-ats", { filename });
   return data;
 }
