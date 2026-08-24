@@ -1,18 +1,20 @@
 from langchain_community.vectorstores import FAISS
-from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_groq import ChatGroq
 from dotenv import load_dotenv
+from pathlib import Path
 from utils import format_llm_response
+from prompts import RESUME_QA_PROMPT
+from embeddings import embedding_model
 import os
 
-load_dotenv()
+load_dotenv(Path(__file__).resolve().parent / ".env")
+
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+GROQ_MODEL = os.getenv("GROQ_MODEL", "openai/gpt-oss-20b")
 
 llm = ChatGroq(
-    model="llama-3.1-8b-instant",
-    api_key=os.getenv("GROQ_API_KEY")
-)
-embedding_model = HuggingFaceEmbeddings(
-    model_name="sentence-transformers/all-MiniLM-L6-v2"
+    model=GROQ_MODEL,
+    groq_api_key=GROQ_API_KEY
 )
 
 retriever = None
@@ -21,12 +23,16 @@ retriever = None
 def init_retriever():
     global retriever
     if os.path.exists("vector_db"):
-        vector_store = FAISS.load_local(
-            "vector_db",
-            embedding_model,
-            allow_dangerous_deserialization=True
-        )
-        retriever = vector_store.as_retriever(search_kwargs={"k": 3})
+        try:
+            vector_store = FAISS.load_local(
+                "vector_db",
+                embedding_model,
+                allow_dangerous_deserialization=True
+            )
+            retriever = vector_store.as_retriever(search_kwargs={"k": 3})
+        except Exception as e:
+            print(f"Warning: Failed to load vector store: {e}")
+            retriever = None
     else:
         retriever = None
 
@@ -49,19 +55,11 @@ def ask_resume(query):
         return "No resume indexed yet. Please upload a resume first."
 
     documents = retriever.invoke(query)
+    if not documents:
+        return "The resume does not mention this information."
+
     context = "\n\n".join(doc.page_content for doc in documents)
-
-    prompt = f"""
-    You are a helpful resume assistant.
-
-    Use ONLY the information from the resume below to answer the question.
-
-    Resume:
-    {context}
-
-    Question:
-    {query}
-    """
+    prompt = RESUME_QA_PROMPT.format(context=context, question=query)
 
     response = llm.invoke(prompt)
     return format_llm_response(response.content)
