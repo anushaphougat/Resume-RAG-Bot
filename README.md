@@ -1,6 +1,7 @@
 # Resume RAG Bot 🤖
 
 An AI-powered Resume Assistant that allows users to upload their resume and ask questions about their skills, experience, education, and other details using Retrieval-Augmented Generation (RAG).
+Live deployed link- https://resumeragai.netlify.app/
 
 ## Overview
 
